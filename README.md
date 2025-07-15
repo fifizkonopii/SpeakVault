@@ -103,7 +103,7 @@ SpeakVault to uniwersalne narzędzie do zaawansowanego generowania mowy z tekstu
 ## 📬 Wsparcie
 
 Masz pytania, pomysły na nowe funkcje lub potrzebujesz pomocy?
-➡️ Napisz na DM lub na kanale.
+➡️ discord: https://discord.gg/AuyrJdahfA
 🎥 Możemy też zrobić prezentację na żywo lub pomóc w konfiguracji.
 
 🙏 Dzięki za uwagę i miłego korzystania z **SpeakVault**! 🎙️🔊✍️
