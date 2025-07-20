@@ -20,11 +20,7 @@ try:
 except ImportError:
     ELEVENLABS_AVAILABLE = False
 
-try:
-    from TTS.api import TTS as CoquiTTS
-    COQUI_AVAILABLE = True
-except ImportError:
-    COQUI_AVAILABLE = False
+
 
 CHAR_LIMIT = 950
 LANG = "pl"
@@ -32,7 +28,6 @@ SUPPORTED_FORMATS = ["ogg", "mp3", "wav"]
 DEFAULT_FORMAT = "ogg"
 CPU_THREADS = os.cpu_count() or 8
 DEFAULT_SETTINGS_FILE = "speakvault_settings.json"
-COQUI_MODEL = "tts_models/pl/glow-tts"
 
 stop_event = threading.Event()
 event_log = []
@@ -179,7 +174,6 @@ def generate_audio_task(task, log, set_last_audio=None):
     tts_voice_id = task.get('voice_id', "")
     eleven_api_key = task.get('eleven_api_key', "")
     eleven_voice_id = task.get('eleven_voice_id', "")
-    coqui_speaker = task.get('coqui_speaker', "")
     tempo = float(task.get("tempo", 1.0))
     pitch = float(task.get("pitch", 1.0))
     gain = float(task.get("gain", 1.0))
@@ -219,22 +213,6 @@ def generate_audio_task(task, log, set_last_audio=None):
             with open(tmp, "wb") as f:
                 for part in result:
                     f.write(part)
-            return True
-        elif engine == "Coqui TTS":
-            if not COQUI_AVAILABLE:
-                log("Moduł Coqui TTS nie zainstalowany! pip install TTS")
-                return False
-            tts = CoquiTTS(model_name=COQUI_MODEL, progress_bar=False, gpu=False)
-            kwargs = {}
-            if coqui_speaker:
-                kwargs['speaker'] = coqui_speaker
-            tts.tts_to_file(text=chunk, file_path=tmp, **kwargs)
-            if fmt != "wav":
-                segment = AudioSegment.from_file(tmp)
-                new_tmp = tmp.replace(".wav", f".{fmt}")
-                segment.export(new_tmp, format=fmt)
-                os.remove(tmp)
-                tmp = new_tmp
             return True
         return False
 
@@ -494,8 +472,6 @@ class SpeakVaultApp:
         engines = ["Google TTS", "Windows TTS"]
         if ELEVENLABS_AVAILABLE:
             engines.append("ElevenLabs")
-        if COQUI_AVAILABLE:
-            engines.append("Coqui TTS")
         self.engine_box = ttk.Combobox(left, textvariable=self.engine_var, values=engines, state="readonly")
         self.engine_box.pack(fill="x")
 
@@ -547,9 +523,6 @@ class SpeakVaultApp:
         self.eleven_voice_label = ttk.Label(self.engine_option_frame, text="ElevenLabs Voice ID:")
         self.eleven_voice_var = tk.StringVar()
         self.eleven_voice_entry = ttk.Entry(self.engine_option_frame, textvariable=self.eleven_voice_var)
-        self.coqui_speaker_label = ttk.Label(self.engine_option_frame, text="Coqui Speaker (opcjonalnie):")
-        self.coqui_speaker_var = tk.StringVar()
-        self.coqui_speaker_entry = ttk.Entry(self.engine_option_frame, textvariable=self.coqui_speaker_var)
 
         ttk.Button(left, text="Zapisz ustawienia", command=self.save_settings_from_gui).pack(anchor="w", pady=(12,0))
         btnrow = ttk.Frame(left); btnrow.pack(pady=7, fill="x")
@@ -713,9 +686,6 @@ class SpeakVaultApp:
             self.eleven_api_entry.pack(fill="x")
             self.eleven_voice_label.pack(anchor="w", pady=(6,0))
             self.eleven_voice_entry.pack(fill="x")
-        elif engine == "Coqui TTS":
-            self.coqui_speaker_label.pack(anchor="w")
-            self.coqui_speaker_entry.pack(fill="x")
         else:
             self.selected_voice_id = ""
 
@@ -747,7 +717,6 @@ class SpeakVaultApp:
             "voice_id": self.selected_voice_id if self.engine_var.get() == "Windows TTS" else "",
             "eleven_api_key": self.eleven_api_var.get() if self.engine_var.get() == "ElevenLabs" else "",
             "eleven_voice_id": self.eleven_voice_var.get() if self.engine_var.get() == "ElevenLabs" else "",
-            "coqui_speaker": self.coqui_speaker_var.get() if self.engine_var.get() == "Coqui TTS" else "",
             "tempo": self.tts_tempo_var.get(),
             "pitch": self.tts_pitch_var.get(),
             "gain": self.tts_gain_var.get(),
@@ -785,7 +754,6 @@ class SpeakVaultApp:
             "voice_id": self.selected_voice_id,
             "eleven_api_key": self.eleven_api_var.get(),
             "eleven_voice_id": self.eleven_voice_var.get(),
-            "coqui_speaker": self.coqui_speaker_var.get(),
             "tempo": self.tts_tempo_var.get(),
             "pitch": self.tts_pitch_var.get(),
             "gain": self.tts_gain_var.get(),
@@ -808,7 +776,6 @@ class SpeakVaultApp:
         self.selected_voice_id = s.get("voice_id", "")
         self.eleven_api_var.set(s.get("eleven_api_key", ""))
         self.eleven_voice_var.set(s.get("eleven_voice_id", ""))
-        self.coqui_speaker_var.set(s.get("coqui_speaker", ""))
         self.tts_tempo_var.set(s.get("tempo", 1.0))
         self.tts_pitch_var.set(s.get("pitch", 1.0))
         self.tts_gain_var.set(s.get("gain", 1.0))
@@ -853,7 +820,7 @@ class SpeakVaultApp:
             "SpeakVault to zaawansowane narzędzie do generowania mowy z tekstu (TTS) oraz wsadowego przetwarzania plików audio.\n"
             "Działa w systemie Windows i obsługuje polskie i angielskie głosy oraz formaty audio ogg/mp3/wav.\n\n"
             "FUNKCJE:\n"
-            "- TTS: Zamiana tekstu (pliki TXT, CSV, SRT) na mowę, z obsługą Google TTS, Windows TTS, ElevenLabs, Coqui TTS (jeśli dostępne).\n"
+            "- TTS: Zamiana tekstu (pliki TXT, CSV, SRT) na mowę, z obsługą Google TTS, Windows TTS, ElevenLabs (jeśli dostępne).\n"
             "- Wybór głosu, API, parametrów mowy (tempo, ton, głośność), formatu audio i scalenia do jednego pliku.\n"
             "- Wsadowa obróbka audio: zmiana tempa, tonu, głośności, usuwanie ciszy, konwersja formatów, wycinanie fragmentów.\n"
             "- Odtwarzanie plików audio z poziomu aplikacji.\n"
