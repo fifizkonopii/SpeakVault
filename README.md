@@ -16,7 +16,7 @@ SpeakVault to uniwersalne narzędzie do zaawansowanego generowania mowy z tekstu
 * **Google TTS** – darmowa synteza online (time.sleep(1) zabezpiecza przed blokadami IP)
 * **Windows TTS** – działa offline z systemowymi głosami
 * **ElevenLabs** – AI głosy najwyższej jakości (wymaga API)
-* **Coqui TTS** – open source, offline
+* **piper tts** – open source, offline
 
 **Parametry mowy:**
 
