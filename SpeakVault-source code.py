@@ -20,8 +20,6 @@ try:
 except ImportError:
     ELEVENLABS_AVAILABLE = False
 
-
-
 CHAR_LIMIT = 950
 LANG = "pl"
 SUPPORTED_FORMATS = ["ogg", "mp3", "wav"]
