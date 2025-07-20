@@ -26,6 +26,40 @@ try:
 except ImportError:
     COQUI_AVAILABLE = False
 
+# Piper TTS availability detection
+PIPER_AVAILABLE = False
+USE_PY_MODULE = False
+
+def detect_piper_availability():
+    global PIPER_AVAILABLE, USE_PY_MODULE
+    try:
+        # Try piper binary first
+        result = subprocess.run(['piper', '--help'], 
+                              capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            PIPER_AVAILABLE = True
+            USE_PY_MODULE = False
+            return
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    
+    try:
+        # Fallback to python module
+        result = subprocess.run([sys.executable, '-m', 'piper', '--help'], 
+                              capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            PIPER_AVAILABLE = True
+            USE_PY_MODULE = True
+            return
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    
+    PIPER_AVAILABLE = False
+    USE_PY_MODULE = False
+
+# Detect Piper availability on startup
+detect_piper_availability()
+
 CHAR_LIMIT = 950
 LANG = "pl"
 SUPPORTED_FORMATS = ["ogg", "mp3", "wav"]
@@ -180,6 +214,7 @@ def generate_audio_task(task, log, set_last_audio=None):
     eleven_api_key = task.get('eleven_api_key', "")
     eleven_voice_id = task.get('eleven_voice_id', "")
     coqui_speaker = task.get('coqui_speaker', "")
+    piper_model_path = task.get('piper_model_path', "")
     tempo = float(task.get("tempo", 1.0))
     pitch = float(task.get("pitch", 1.0))
     gain = float(task.get("gain", 1.0))
@@ -236,6 +271,46 @@ def generate_audio_task(task, log, set_last_audio=None):
                 os.remove(tmp)
                 tmp = new_tmp
             return True
+        elif engine == "Piper TTS":
+            if not PIPER_AVAILABLE:
+                log("Piper TTS nie jest dostępny! Sprawdź instalację piper lub python -m piper")
+                return False
+            if not piper_model_path:
+                log("Nie podano ścieżki do modelu Piper TTS!")
+                return False
+            
+            # Choose command based on binary availability
+            if USE_PY_MODULE:
+                cmd = [sys.executable, '-m', 'piper', '--model-path', piper_model_path, '--text', chunk, '--out', tmp]
+                log_event(f"Używam modułu Python dla Piper TTS: {chunk[:40]}")
+            else:
+                cmd = ['piper', '--model-path', piper_model_path, '--text', chunk, '--out', tmp]
+                log_event(f"Używam binarki Piper TTS: {chunk[:40]}")
+            
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                if result.returncode != 0:
+                    log_event(f"Błąd Piper TTS (kod {result.returncode}): {result.stderr}")
+                    log(f"Błąd Piper TTS: {result.stderr}")
+                    return False
+                
+                if result.stderr:
+                    log_event(f"Ostrzeżenie Piper TTS: {result.stderr}")
+                
+                if os.path.exists(tmp) and os.path.getsize(tmp) > 0:
+                    return True
+                else:
+                    log("Piper TTS nie wygenerował pliku audio lub plik jest pusty")
+                    return False
+                    
+            except subprocess.TimeoutExpired:
+                log_event("Timeout przy wykonywaniu Piper TTS")
+                log("Timeout przy wykonywaniu Piper TTS")
+                return False
+            except Exception as e:
+                log_event(f"Nieoczekiwany błąd Piper TTS: {str(e)}")
+                log(f"Błąd Piper TTS: {str(e)}")
+                return False
         return False
 
     # Obsługa TXT/CSV/SRT nie-merge i merge
@@ -496,6 +571,8 @@ class SpeakVaultApp:
             engines.append("ElevenLabs")
         if COQUI_AVAILABLE:
             engines.append("Coqui TTS")
+        if PIPER_AVAILABLE:
+            engines.append("Piper TTS")
         self.engine_box = ttk.Combobox(left, textvariable=self.engine_var, values=engines, state="readonly")
         self.engine_box.pack(fill="x")
 
@@ -550,6 +627,9 @@ class SpeakVaultApp:
         self.coqui_speaker_label = ttk.Label(self.engine_option_frame, text="Coqui Speaker (opcjonalnie):")
         self.coqui_speaker_var = tk.StringVar()
         self.coqui_speaker_entry = ttk.Entry(self.engine_option_frame, textvariable=self.coqui_speaker_var)
+        self.piper_model_label = ttk.Label(self.engine_option_frame, text="Piper Model Path:")
+        self.piper_model_var = tk.StringVar()
+        self.piper_model_entry = ttk.Entry(self.engine_option_frame, textvariable=self.piper_model_var)
 
         ttk.Button(left, text="Zapisz ustawienia", command=self.save_settings_from_gui).pack(anchor="w", pady=(12,0))
         btnrow = ttk.Frame(left); btnrow.pack(pady=7, fill="x")
@@ -716,6 +796,9 @@ class SpeakVaultApp:
         elif engine == "Coqui TTS":
             self.coqui_speaker_label.pack(anchor="w")
             self.coqui_speaker_entry.pack(fill="x")
+        elif engine == "Piper TTS":
+            self.piper_model_label.pack(anchor="w")
+            self.piper_model_entry.pack(fill="x")
         else:
             self.selected_voice_id = ""
 
@@ -748,6 +831,7 @@ class SpeakVaultApp:
             "eleven_api_key": self.eleven_api_var.get() if self.engine_var.get() == "ElevenLabs" else "",
             "eleven_voice_id": self.eleven_voice_var.get() if self.engine_var.get() == "ElevenLabs" else "",
             "coqui_speaker": self.coqui_speaker_var.get() if self.engine_var.get() == "Coqui TTS" else "",
+            "piper_model_path": self.piper_model_var.get() if self.engine_var.get() == "Piper TTS" else "",
             "tempo": self.tts_tempo_var.get(),
             "pitch": self.tts_pitch_var.get(),
             "gain": self.tts_gain_var.get(),
@@ -853,7 +937,7 @@ class SpeakVaultApp:
             "SpeakVault to zaawansowane narzędzie do generowania mowy z tekstu (TTS) oraz wsadowego przetwarzania plików audio.\n"
             "Działa w systemie Windows i obsługuje polskie i angielskie głosy oraz formaty audio ogg/mp3/wav.\n\n"
             "FUNKCJE:\n"
-            "- TTS: Zamiana tekstu (pliki TXT, CSV, SRT) na mowę, z obsługą Google TTS, Windows TTS, ElevenLabs, Coqui TTS (jeśli dostępne).\n"
+            "- TTS: Zamiana tekstu (pliki TXT, CSV, SRT) na mowę, z obsługą Google TTS, Windows TTS, ElevenLabs, Coqui TTS, Piper TTS (jeśli dostępne).\n"
             "- Wybór głosu, API, parametrów mowy (tempo, ton, głośność), formatu audio i scalenia do jednego pliku.\n"
             "- Wsadowa obróbka audio: zmiana tempa, tonu, głośności, usuwanie ciszy, konwersja formatów, wycinanie fragmentów.\n"
             "- Odtwarzanie plików audio z poziomu aplikacji.\n"
