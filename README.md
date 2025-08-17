@@ -106,7 +106,7 @@ Profile ustawień:
 ## 🖥️ Uruchamianie
 
 - Windows: pobierz plik .exe i uruchom.
-- Aplikacja jest kompilowana do jednego pliku wykonywalnego (Nuitka) i zawiera wszystkie potrzebne biblioteki. Może ważyć trochę więcej, ale dzięki temu działa „od strzału” – bez dodatkowych instalacji i problemów z zależnościami.
+- Aplikacja jest kompilowana  (Nuitka) i zawiera wszystkie potrzebne biblioteki. Może ważyć trochę więcej, ale dzięki temu działa „od strzału” – bez dodatkowych instalacji i problemów z zależnościami.
 
 ---
 
