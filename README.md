@@ -113,7 +113,7 @@ Profile ustawień:
 ## 📬 Wsparcie
 
 Masz pytania, pomysły na nowe funkcje lub potrzebujesz pomocy?
-➡️ discord: https://discord.gg/AuyrJdahfA  
+➡️ discord: https://discord.gg/ht9dfanaRE  
 🎥 Możemy też zrobić prezentację na żywo lub pomóc w konfiguracji.
 
 🙏 Dzięki za uwagę i miłego korzystania z SpeakVault! 🎙️🔊✍️
