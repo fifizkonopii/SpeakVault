@@ -7,7 +7,7 @@ SpeakVault to uniwersalne narzędzie do zaawansowanego generowania mowy z tekstu
 ## ▶️ 1. Generator mowy z tekstu (TTS)
 
 Obsługiwane formaty wejściowe:
-- TXT, CSV, SRT (napisy filmowe)
+- TXT, CSV,
 - Automatyczne rozpoznawanie formatu i wyciąganie tekstów do syntezy
 
 Silniki mowy:
@@ -37,19 +37,7 @@ Scalanie lub rozdzielanie:
 
 ---
 
-## ▶️ 2. Obsługa napisów SRT (tryb filmowy / lektorski)
-
-Synchronizacja audio z czasami napisów:
-- Podkładanie lektora pod film dzięki automatycznemu dopasowaniu do SRT
-
-Tryby:
-- Scalanie całego SRT w jeden plik audio
-- Generowanie osobnych plików dla każdego wpisu SRT
-- Opcjonalna cisza (1 sekunda) po każdej kwestii
-
----
-
-## ▶️ 3. Wsadowa obróbka plików audio (Batch Tools)
+## ▶️ 2. Wsadowa obróbka plików audio (Batch Tools)
 
 Funkcje batch:
 - Dodawanie wielu plików/folderów na raz
@@ -60,14 +48,14 @@ Funkcje batch:
 
 ---
 
-## ▶️ 4. Odtwarzanie audio w programie
+## ▶️ 3. Odtwarzanie audio w programie
 
 - Podgląd ostatniego wygenerowanego pliku
 - Odtwarzanie wybranego pliku z listy batch
 
 ---
 
-## ▶️ 5. Zarządzanie ustawieniami
+## ▶️ 4. Zarządzanie ustawieniami
 
 Profile ustawień:
 - Zapis/odczyt konfiguracji do pliku JSON
@@ -77,14 +65,14 @@ Profile ustawień:
 
 ---
 
-## ▶️ 6. Dziennik zdarzeń i logi
+## ▶️ 5. Dziennik zdarzeń i logi
 
 - Pełna historia operacji (generowanie, błędy, zapis, odczyt)
 - Łatwe debugowanie i analiza procesów
 
 ---
 
-## ▶️ 7. Nowoczesny interfejs
+## ▶️ 6. Nowoczesny interfejs
 
 - Ciemny motyw, podział na zakładki (TTS, Batch, Logi)
 - Filtr silników: Wszystkie / Darmowe / Płatne
@@ -92,7 +80,7 @@ Profile ustawień:
 
 ---
 
-## ▶️ 8. Praktyczne zastosowania
+## ▶️ 7. Praktyczne zastosowania
 
 - Tworzenie lektora do filmów, seriali, kursów online (SRT)
 - Nagrywanie audiobooków (scalanie, tempo, ton)
